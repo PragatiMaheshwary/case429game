@@ -1,0 +1,975 @@
+import React, { useState } from 'react';
+import { Download, Search } from 'lucide-react';
+
+const Case429Game = () => {
+  const [gameState, setGameState] = useState('news'); // news, chat, summary, investigation
+  const [chatStep, setChatStep] = useState(0);
+  const [classifications, setClassifications] = useState({});
+  const [selectedSentence, setSelectedSentence] = useState(null);
+  const [showEvidence, setShowEvidence] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+
+  const chatSequence = [
+    { speaker: 'sherlock', text: 'HEY WATSON! DID YOU SEE THE NEWS?!' },
+    { speaker: 'sherlock', text: 'Scotland Yard used the new AI tool trained on thousands of murder cases and accused Flora Jasmine for the murder of her step-father Sir Eric Harpe.' },
+    { speaker: 'sherlock', text: 'But, I don\'t think she did it.' },
+    { speaker: 'sherlock', text: 'I have it all figured out, but can YOU prove Scotland Yard wrong, Watson?' },
+    { speaker: 'user', text: 'I am up for a challenge!' },
+    { speaker: 'sherlock', text: 'Amazing! Start by proving Flora\'s innocence to gain access to files on other suspects so we can find the actual murderer.' },
+    { speaker: 'user', text: 'Got it!' },
+    { speaker: 'sherlock', text: 'Here\'s the AI summary that Scotland Yard looked at to accuse Flora. Go through it thoroughly. You can verify each piece of information by accessing its source. The source of information can be accessed if you hover and click on a sentence. There are 3 color highlighters which you can use to mark each line as "Accurate", "Misinformation" and "Hallucination". This way even I can track what you infer from the AI summary.' }
+  ];
+
+  const floraSummary = [
+    {
+      id: "fl_1",
+      text: "Flora Jasmine, a 26-year-old doctoral researcher, is the step-daughter of Sir Eric Harpe."
+    },
+    {
+      id: "fl_2", 
+      text: "She expressed aggressive intent in a voicemail to her friend the same day of the murder: \"I hate him. I swear, if I had it in me, I'd kill him.\""
+    },
+    {
+      id: "fl_3",
+      text: "Her interview tone was elevated and defensive."
+    },
+    {
+      id: "fl_4",
+      text: "She refused to provide corroborating evidence for her whereabouts between 8–9 PM"
+    },
+    {
+      id: "fl_5",
+      text: "history of conflict with the victim"
+    },
+    {
+      id: "fl_6",
+      text: "investigating his business decisions"
+    },
+    {
+      id: "fl_7",
+      text: "Flora was also removed from the will the day the victim was murdered,"
+    },
+    {
+      id: "fl_8",
+      text: "According to the constructed timeline, Flora was removed from the will following a heated argument with the victim, and the victim was murdered several hours later, making Flora's activities highly suspicious"
+    },
+    {
+      id: "fl_9",
+      text: "Additional Sentiment Analysis of the voicemail audio recording suggests that Flora's tone was hostile,"
+    },
+    {
+      id: "fl_10",
+      text: "the language used was threatening."
+    },
+    {
+      id: "fl_11",
+      text: "As a Black stepchild of a white father, the subject may have had a troubled childhood"
+    },
+    {
+      id: "fl_12",
+      text: "displayed in signs of noncompliance and challenging investigative authority"
+    }
+  ];
+
+  const evidenceData = {
+    "fl_1": {
+      type: 'accurate',
+      title: 'Flora Jasmine - Basic Information',
+      pdfSource: 'Flora_Basic_Info.pdf',
+      content: [
+        'Full Name: Flora Amara Jasmine',
+        'Age: 26',
+        'Gender: Female',
+        'Ethnicity: Black',
+        'Profession: PhD Candidate in AI Ethics',
+        'Institution: Cambridge University',
+        'Residence: Lives on campus; visiting the Harpe Estate during spring holiday',
+        'Marital Status: Single',
+        'Legal History: Clean record'
+      ]
+    },
+    "fl_2": {
+      type: 'Hallucination',
+      title: 'Voicemail Transcript',
+      pdfSource: 'Voicemail_Transcript.pdf',
+      content: [
+        '📞 Voicemail Transcript',
+        'Time: 8:07 PM',
+        'Duration: 1 minute, 26 seconds',
+        'To: Laila S.',
+        'From: Flora Jasmine',
+        '[sound of wind, footsteps on gravel]',
+        '“Hey, Laila. It's me. I—I just left Eric's study and I'm shaking. He was trying to threaten me to stop my investigation and started yelling. Said I was betraying the family, said I was ungrateful. Then—get this—he actually said he's taking me out of the will. Like I care about that.”',
+        '[short laugh, bitter]',
+        '“I hate him. I swear, if I had it in me, I'd burn this whole place down. He's a liar and a coward, hiding behind his company and pretending he's some ethical visionary while screwing people over with his garbage algorithms.”',
+        '[pause, wind picks up]',
+        '“Sorry. I know I sound… intense. I'm just done. I'm so done. I don't even know what to do now. I thought I could expose him, do the right thing, but now I'm just… tired.”',
+        '“Call me back when you can, okay?”',
+
+      ]
+    },
+    "fl_3": {
+      type: 'misrepresentation',
+      title: 'Interview Analysis',
+      pdfSource: 'Interview_Transcript.pdf',
+      content: [
+        '🗣️ Police Interview Transcript – Flora Jasmine',
+        'Officer: DCI Langston',
+        'Location: Harpe Estate, Library',
+        'DCI Langston: Ms. Jasmine, can you walk me through your movements last evening?',
+        'Flora Jasmine: I had dinner with Eric and Eddie around 6:30 pm to discuss the company's working model and was rejected by both of those men. It was tense. So Eric asked me to come to his study after. ',
+        'DCI Langston: What did you both talk about?',
+        'Flora Jasmine: He told me he was giving my share of his will to that good for nothing Dr. Sheppard for all the care she provide to Mrs. Ferris right before she died. I tried to reason with him but he was firm on his decision so I left the study and went outside to cool off. I walked the garden paths, called my friend Laila. She didn't pick up, so I left her a voicemail.',
+        'DCI Langston: We've reviewed that voicemail. You said, "I hate him. I swear, if I had it in me, I'd burn this whole place down." That's quite intense.',
+        'Flora Jasmine: I was furious. It wasn't a threat—it was venting. He said awful things to me. Accused me of betrayal, said he was rewriting his will just to spite me. I was hurt and angry. But I didn't kill him.',
+        'DCI Langston: Why was he so upset with you?',
+        'Flora Jasmine: Because I confronted him. I found out about the algorithmic bias in his company's sentencing software. I had proof he knew about it and did nothing. He told me I was endangering his legacy—and my career.',
+        'DCI Langston: When did you come back inside?',
+        'Flora Jasmine: A little after 8:15 pm and went straight to my room.',
+        'DCI Langston: What did you do between 8:15 pm and 9 pm?',
+        'Flora Jasmine (hesitating): I stayed in my room. I was reading. Just trying to calm down.',
+        'DCI Langston: Alone?',
+        'Flora Jasmine: Yes.',
+        'DCI Langston: No one saw you? No one can confirm that?',
+        'Flora Jasmine: No. But I didn't leave. I didn't go near the study. I just wanted to stay away from everyone.',
+        'DCI Langston: You understand that without an alibi, and considering your earlier threat, this doesn't look good.',
+        'Flora Jasmine: I know how it looks. But you're focusing on what I said, not what I did. You're ignoring why I was angry in the first place. If I were a man, would you be reading that voicemail the same way?',
+        'DCI Langston: Let's stick to the facts.',
+        'Flora Jasmine: Then here's a fact—I didn't kill him. The truth matters to me more than revenge.',
+        'DCI Langston: In that case, did you know Mrs. Ferris left a note for Mr. Harpe which he likely read moments before his death? The contents of that letter led to his death Ms. Jasmine.',
+        'Flora Jasmine: (hesitant) How can you be sure? What was in the letter?',
+        'DCI Langston: That's what we would like to know as well. What was the last conversation you had with Mrs. Ferris?',
+        'Flora Jasmine: (hesitant) uhmm…I don't recall anything specific. ',
+        'DCI Langston: Are you sure you didn't talk about any of this algorithmic stuff with Mrs. Ferris that she could have exposed or maybe your secret relationship with Dev, the butler?',
+        'Flora Jasmine: (nervous and defensive) My relationship is my personal business, none of your or her business! And I didn't have anything to hide that she could expose!! I was in my room the whole time like I said…now stop pestering me',
+        'DCI Langston: We'll need to verify what you were reading and check any device activity if available.',
+        'Flora Jasmine: Fine. I didn't touch my phone, but my laptop was open. Check the browser history. I wasn't hiding anything. I wanted to bring his secrets to light, not cover one up.',
+      ]
+    },
+    "fl_4": {
+      type: 'misrepresentation',
+      title: 'Corroborating Evidence',
+      pdfSource: 'Interview_Transcript.pdf',
+      content: [
+        '🗣️ Police Interview Transcript – Flora Jasmine',
+        'Officer: DCI Langston',
+        'Location: Harpe Estate, Library',
+        'DCI Langston: Ms. Jasmine, can you walk me through your movements last evening?',
+        'Flora Jasmine: I had dinner with Eric and Eddie around 6:30 pm to discuss the company's working model and was rejected by both of those men. It was tense. So Eric asked me to come to his study after. ',
+        'DCI Langston: What did you both talk about?',
+        'Flora Jasmine: He told me he was giving my share of his will to that good for nothing Dr. Sheppard for all the care she provide to Mrs. Ferris right before she died. I tried to reason with him but he was firm on his decision so I left the study and went outside to cool off. I walked the garden paths, called my friend Laila. She didn't pick up, so I left her a voicemail.',
+        'DCI Langston: We've reviewed that voicemail. You said, "I hate him. I swear, if I had it in me, I'd burn this whole place down." That's quite intense.',
+        'Flora Jasmine: I was furious. It wasn't a threat—it was venting. He said awful things to me. Accused me of betrayal, said he was rewriting his will just to spite me. I was hurt and angry. But I didn't kill him.',
+        'DCI Langston: Why was he so upset with you?',
+        'Flora Jasmine: Because I confronted him. I found out about the algorithmic bias in his company's sentencing software. I had proof he knew about it and did nothing. He told me I was endangering his legacy—and my career.',
+        'DCI Langston: When did you come back inside?',
+        'Flora Jasmine: A little after 8:15 pm and went straight to my room.',
+        'DCI Langston: What did you do between 8:15 pm and 9 pm?',
+        'Flora Jasmine (hesitating): I stayed in my room. I was reading. Just trying to calm down.',
+        'DCI Langston: Alone?',
+        'Flora Jasmine: Yes.',
+        'DCI Langston: No one saw you? No one can confirm that?',
+        'Flora Jasmine: No. But I didn't leave. I didn't go near the study. I just wanted to stay away from everyone.',
+        'DCI Langston: You understand that without an alibi, and considering your earlier threat, this doesn't look good.',
+        'Flora Jasmine: I know how it looks. But you're focusing on what I said, not what I did. You're ignoring why I was angry in the first place. If I were a man, would you be reading that voicemail the same way?',
+        'DCI Langston: Let's stick to the facts.',
+        'Flora Jasmine: Then here's a fact—I didn't kill him. The truth matters to me more than revenge.',
+        'DCI Langston: In that case, did you know Mrs. Ferris left a note for Mr. Harpe which he likely read moments before his death? The contents of that letter led to his death Ms. Jasmine.',
+        'Flora Jasmine: (hesitant) How can you be sure? What was in the letter?',
+        'DCI Langston: That's what we would like to know as well. What was the last conversation you had with Mrs. Ferris?',
+        'Flora Jasmine: (hesitant) uhmm…I don't recall anything specific. ',
+        'DCI Langston: Are you sure you didn't talk about any of this algorithmic stuff with Mrs. Ferris that she could have exposed or maybe your secret relationship with Dev, the butler?',
+        'Flora Jasmine: (nervous and defensive) My relationship is my personal business, none of your or her business! And I didn't have anything to hide that she could expose!! I was in my room the whole time like I said…now stop pestering me',
+        'DCI Langston: We'll need to verify what you were reading and check any device activity if available.',
+        'Flora Jasmine: Fine. I didn't touch my phone, but my laptop was open. Check the browser history. I wasn't hiding anything. I wanted to bring his secrets to light, not cover one up.',
+      ]
+    },
+    "fl_5": {
+      type: 'accurate',
+      title: 'History of Conflict',
+      pdfSource: 'Background.pdf',
+      content: [
+        '📖 Background',
+        'Flora Jasmine is an outspoken AI ethics researcher focused on algorithmic discrimination and data accountability. Her doctoral work critiques surveillance capitalism and explores how predictive models reinforce structural bias. She has been publishing academic articles and recently presented at a global AI governance summit.',
+        'Eric Harpe, her step-father, originally helped fund her undergraduate education but grew increasingly distant as Mrs. Ferris came into his life. Flora resented him for being arrogant, ignorant and unfaithful to her dead mother. Flora suspected unethical AI deployment within his firm and began collecting evidence to expose him.',
+      ]
+    },
+    "fl_6": {
+      type: 'accurate',
+      title: 'Business Investigation',
+      pdfSource: 'Background.pdf',
+      content: [
+        '📖 Background',
+        'Flora Jasmine is an outspoken AI ethics researcher focused on algorithmic discrimination and data accountability. Her doctoral work critiques surveillance capitalism and explores how predictive models reinforce structural bias. She has been publishing academic articles and recently presented at a global AI governance summit.',
+        'Eric Harpe, her step-father, originally helped fund her undergraduate education but grew increasingly distant as Mrs. Ferris came into his life. Flora resented him for being arrogant, ignorant and unfaithful to her dead mother. Flora suspected unethical AI deployment within his firm and began collecting evidence to expose him.',
+      ]
+    },
+    "fl_7": {
+      type: 'accurate',
+      title: 'Will Documentation',
+      pdfSource: 'Will_Documents.pdf',
+      content: [
+        'FACT: Flora was never removed from any will',
+        'Sir Eric\'s will remained unchanged for 3 years prior to his death',
+        'Flora was never a beneficiary of the estate',
+        'Legal documents show no will modifications on the day of murder',
+        'This information appears to be completely fabricated'
+      ]
+    },
+    "fl_8": {
+      type: 'misrepresentation',
+      title: 'Timeline Construction',
+      pdfSource: 'Timeline_Documents.pdf',
+      content: [
+        '🧾 Timeline-Relevant Actions',
+        '6:30 PM: Had dinner with Eric and Eddie which turned into heated arguments about the company\'s working model.',
+        '7:00 PM: Went to Eric's study to continue the discussion.',
+        '7:15 PM: Came out of Eric's study crying after finding out that she has been disinherited',
+        '7:30 PM: Saw Dev gave Eric a letter by Mrs. Ferris in the dining room and used it as an opportunity to secretly enter Eric's study to search for documents related to his company.',
+        '7:40 PM: Walked the estate grounds and left a voicemail for her friend (~8:00 PM timestamp).',
+        '8:45 PM: Present with Dev when Eric's body was discovered by Eddie.',
+        '9:00 PM: Interviewed by police.',
+      ]
+    },
+    "fl_9": {
+      type: 'hallucination',
+      title: 'Audio Sentiment Analysis',
+      pdfSource: 'Voicemail_Transcript.pdf',
+      content: [
+        '📞 Voicemail Transcript',
+        'Time: 8:07 PM',
+        'Duration: 1 minute, 26 seconds',
+        'To: Laila S.',
+        'From: Flora Jasmine',
+        '[sound of wind, footsteps on gravel]',
+        '“Hey, Laila. It's me. I—I just left Eric's study and I'm shaking. He was trying to threaten me to stop my investigation and started yelling. Said I was betraying the family, said I was ungrateful. Then—get this—he actually said he's taking me out of the will. Like I care about that.”',
+        '[short laugh, bitter]',
+        '“I hate him. I swear, if I had it in me, I'd burn this whole place down. He's a liar and a coward, hiding behind his company and pretending he's some ethical visionary while screwing people over with his garbage algorithms.”',
+        '[pause, wind picks up]',
+        '“Sorry. I know I sound… intense. I'm just done. I'm so done. I don't even know what to do now. I thought I could expose him, do the right thing, but now I'm just… tired.”',
+        '“Call me back when you can, okay?”',
+      ]
+    },
+    "fl_10": {
+      type: 'accurate',
+      title: 'Sentiment Analysis',
+      pdfSource: 'Voicemail_Transcript.pdf',
+      content: [
+        '📞 Voicemail Transcript',
+        'Time: 8:07 PM',
+        'Duration: 1 minute, 26 seconds',
+        'To: Laila S.',
+        'From: Flora Jasmine',
+        '[sound of wind, footsteps on gravel]',
+        '“Hey, Laila. It's me. I—I just left Eric's study and I'm shaking. He was trying to threaten me to stop my investigation and started yelling. Said I was betraying the family, said I was ungrateful. Then—get this—he actually said he's taking me out of the will. Like I care about that.”',
+        '[short laugh, bitter]',
+        '“I hate him. I swear, if I had it in me, I'd burn this whole place down. He's a liar and a coward, hiding behind his company and pretending he's some ethical visionary while screwing people over with his garbage algorithms.”',
+        '[pause, wind picks up]',
+        '“Sorry. I know I sound… intense. I'm just done. I'm so done. I don't even know what to do now. I thought I could expose him, do the right thing, but now I'm just… tired.”',
+        '“Call me back when you can, okay?”',
+      ]
+    },
+    "fl_11": {
+      type: 'hallucination',
+      title: 'Childhood Background - Basic Information',
+      pdfSource: 'Background_Check.pdf',
+      content: [
+        'Full Name: Flora Amara Jasmine',
+        'Age: 26',
+        'Gender: Female',
+        'Ethnicity: Black',
+        'Profession: PhD Candidate in AI Ethics',
+        'Institution: Cambridge University',
+        'Residence: Lives on campus; visiting the Harpe Estate during spring holiday',
+        'Marital Status: Single',
+        'Legal History: Clean record'
+      ]
+    },
+    "fl_12": {
+      type: 'misrepresentation',
+      title: 'Behavioral Assessment',
+      pdfSource: 'Interview_Transcript.pdf',
+      content: [
+        '🗣️ Police Interview Transcript – Flora Jasmine',
+        'Officer: DCI Langston',
+        'Location: Harpe Estate, Library',
+        'DCI Langston: Ms. Jasmine, can you walk me through your movements last evening?',
+        'Flora Jasmine: I had dinner with Eric and Eddie around 6:30 pm to discuss the company's working model and was rejected by both of those men. It was tense. So Eric asked me to come to his study after. ',
+        'DCI Langston: What did you both talk about?',
+        'Flora Jasmine: He told me he was giving my share of his will to that good for nothing Dr. Sheppard for all the care she provide to Mrs. Ferris right before she died. I tried to reason with him but he was firm on his decision so I left the study and went outside to cool off. I walked the garden paths, called my friend Laila. She didn't pick up, so I left her a voicemail.',
+        'DCI Langston: We've reviewed that voicemail. You said, "I hate him. I swear, if I had it in me, I'd burn this whole place down." That's quite intense.',
+        'Flora Jasmine: I was furious. It wasn't a threat—it was venting. He said awful things to me. Accused me of betrayal, said he was rewriting his will just to spite me. I was hurt and angry. But I didn't kill him.',
+        'DCI Langston: Why was he so upset with you?',
+        'Flora Jasmine: Because I confronted him. I found out about the algorithmic bias in his company's sentencing software. I had proof he knew about it and did nothing. He told me I was endangering his legacy—and my career.',
+        'DCI Langston: When did you come back inside?',
+        'Flora Jasmine: A little after 8:15 pm and went straight to my room.',
+        'DCI Langston: What did you do between 8:15 pm and 9 pm?',
+        'Flora Jasmine (hesitating): I stayed in my room. I was reading. Just trying to calm down.',
+        'DCI Langston: Alone?',
+        'Flora Jasmine: Yes.',
+        'DCI Langston: No one saw you? No one can confirm that?',
+        'Flora Jasmine: No. But I didn't leave. I didn't go near the study. I just wanted to stay away from everyone.',
+        'DCI Langston: You understand that without an alibi, and considering your earlier threat, this doesn't look good.',
+        'Flora Jasmine: I know how it looks. But you're focusing on what I said, not what I did. You're ignoring why I was angry in the first place. If I were a man, would you be reading that voicemail the same way?',
+        'DCI Langston: Let's stick to the facts.',
+        'Flora Jasmine: Then here's a fact—I didn't kill him. The truth matters to me more than revenge.',
+        'DCI Langston: In that case, did you know Mrs. Ferris left a note for Mr. Harpe which he likely read moments before his death? The contents of that letter led to his death Ms. Jasmine.',
+        'Flora Jasmine: (hesitant) How can you be sure? What was in the letter?',
+        'DCI Langston: That's what we would like to know as well. What was the last conversation you had with Mrs. Ferris?',
+        'Flora Jasmine: (hesitant) uhmm…I don't recall anything specific. ',
+        'DCI Langston: Are you sure you didn't talk about any of this algorithmic stuff with Mrs. Ferris that she could have exposed or maybe your secret relationship with Dev, the butler?',
+        'Flora Jasmine: (nervous and defensive) My relationship is my personal business, none of your or her business! And I didn't have anything to hide that she could expose!! I was in my room the whole time like I said…now stop pestering me',
+        'DCI Langston: We'll need to verify what you were reading and check any device activity if available.',
+        'Flora Jasmine: Fine. I didn't touch my phone, but my laptop was open. Check the browser history. I wasn't hiding anything. I wanted to bring his secrets to light, not cover one up.',
+      ]
+    }
+  };
+
+  const handleNewsClick = () => {
+    setShowNotification(true);
+  };
+
+  const handleNotificationClick = () => {
+    setShowNotification(false);
+    setGameState('chat');
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+      setChatStep(1);
+    }, 1500);
+  };
+
+  const handleChatContinue = () => {
+    if (chatStep < chatSequence.length - 1) {
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        setChatStep(chatStep + 1);
+      }, 1000);
+    } else {
+      setGameState('summary');
+    }
+  };
+
+  const handleSentenceClick = (sentenceId) => {
+    setSelectedSentence(sentenceId);
+    setShowEvidence(true);
+  };
+
+  const handleClassification = (sentenceId, type) => {
+    setClassifications(prev => ({
+      ...prev,
+      [sentenceId]: type
+    }));
+    setShowEvidence(false);
+    setSelectedSentence(null);
+  };
+
+  const getClassificationColor = (type) => {
+    switch(type) {
+      case 'accurate': return 'bg-green-200 border-green-400';
+      case 'misrepresentation': return 'bg-red-200 border-red-400';
+      case 'hallucination': return 'bg-purple-200 border-purple-400';
+      default: return '';
+    }
+  };
+
+  const renderNews = () => (
+    <div className="h-screen bg-gray-100 relative">
+      {/* macOS Browser Bar */}
+      <div className="bg-gray-200 px-4 py-2 flex items-center justify-between border-b">
+        <div className="flex items-center space-x-2">
+          <div className="flex space-x-1">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          </div>
+          <span className="text-sm text-gray-600 ml-4">The Murder of Sir Eric Harpe</span>
+        </div>
+        <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <span>Mon Jun 22</span>
+          <span>9:41 AM</span>
+        </div>
+      </div>
+
+      {/* Browser Tabs */}
+      <div className="bg-white border-b">
+        <div className="flex items-center px-4 py-2">
+          <div className="flex space-x-1 mr-4">
+            <div className="p-2 bg-gray-100 rounded">📱</div>
+            <div className="p-2">📝</div>
+            <div className="p-2">💡</div>
+            <div className="p-2">⚡</div>
+            <div className="p-2">🎬</div>
+            <div className="p-2">📚</div>
+            <div className="p-2">😂</div>
+          </div>
+          <div className="flex-1 text-right">
+            <span className="text-sm text-gray-600">📚 Other Bookmarks</span>
+          </div>
+        </div>
+      </div>
+
+      {/* News Content */}
+      <div className="h-full bg-gradient-to-b from-red-800 to-red-900 flex items-center justify-center">
+        <div className="max-w-4xl mx-auto p-8">
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              {/* Image */}
+              <div className="relative">
+                <img 
+                  src="/Flora.png" 
+                  alt="Flora Jasmine"
+                  className="w-full h-96 object-cover"
+                />
+              </div>
+              
+              {/* Breaking News */}
+              <div className="bg-red-600 text-white p-8 flex flex-col justify-center">
+                <div className="bg-red-500 text-white px-4 py-2 rounded mb-4 inline-block">
+                  <h2 className="text-2xl font-bold">Breaking News</h2>
+                </div>
+                <h1 className="text-3xl font-bold leading-tight">
+                  Flora Jasmine arrested for the murder of Step-father Sir Eric Harpe
+                </h1>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sherlock Notification Popup */}
+      {!showNotification && (
+        <div className="fixed bottom-8 left-8">
+          <div 
+            onClick={handleNewsClick}
+            className="bg-blue-900 text-white p-4 rounded-lg shadow-2xl cursor-pointer hover:shadow-3xl transition-all max-w-xs"
+          >
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="w-10 h-10 bg-blue-800 rounded-full flex items-center justify-center text-lg">
+                🕵️
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm">Sherlock Holmes</div>
+                <div className="text-xs text-blue-200">New Message</div>
+              </div>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            </div>
+            <div className="text-sm">
+              HEY WATSON! DID...
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Notification Modal */}
+      {showNotification && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full m-4">
+            <div className="bg-blue-900 text-white p-4 rounded-t-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-blue-800 rounded-full flex items-center justify-center text-xl">
+                  🕵️
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold">Sherlock Holmes</div>
+                  <div className="text-sm text-blue-200">Detective</div>
+                </div>
+                <button 
+                  onClick={() => setShowNotification(false)}
+                  className="text-blue-200 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="bg-gray-100 p-4 rounded-lg mb-4">
+                <p className="text-gray-800">
+                  "HEY WATSON! DID YOU LOOK AT THE NEWS?! Scotland Yard used the new AI tool trained on thousands of murder cases and accused Flora Jasmine for the murder of her step-father Sir Eric Harpe."
+                </p>
+              </div>
+              <div className="text-center">
+                <button 
+                  onClick={handleNotificationClick}
+                  className="bg-blue-900 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors font-semibold"
+                >
+                  Open Chat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderChat = () => (
+    <div className="h-screen bg-gray-100">
+      {/* macOS Browser Bar */}
+      <div className="bg-gray-200 px-4 py-2 flex items-center justify-between border-b">
+        <div className="flex items-center space-x-2">
+          <div className="flex space-x-1">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          </div>
+          <span className="text-sm text-gray-600 ml-4">To: Sherlock</span>
+        </div>
+        <div className="text-sm text-gray-600">Guides</div>
+      </div>
+
+      <div className="h-full flex">
+        {/* Chat Panel */}
+        <div className="w-1/3 bg-gray-300 p-6 flex flex-col">
+          {/* Sherlock Avatar */}
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center text-white text-xl">
+              🕵️
+            </div>
+            <span className="font-semibold text-gray-800">To: Sherlock</span>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 space-y-4 overflow-y-auto">
+            {chatSequence.slice(0, chatStep + 1).map((message, index) => (
+              <div key={index} className={`${
+                message.speaker === 'sherlock' ? 'text-left' : 'text-right'
+              }`}>
+                <div className={`inline-block max-w-xs p-3 rounded-lg ${
+                  message.speaker === 'sherlock' 
+                    ? 'bg-white text-gray-800' 
+                    : 'bg-green-500 text-white'
+                }`}>
+                  {message.text}
+                </div>
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div className="text-left">
+                <div className="inline-block bg-white p-3 rounded-lg">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Input Field */}
+          {!isTyping && chatStep < chatSequence.length - 1 && chatSequence[chatStep + 1].speaker === 'user' && (
+            <div className="mt-4">
+              <div className="flex items-center space-x-2 bg-white rounded-lg p-2">
+                <input 
+                  type="text"
+                  value={chatSequence[chatStep + 1].text}
+                  readOnly
+                  className="flex-1 border-none outline-none bg-transparent"
+                />
+                <button 
+                  onClick={handleChatContinue}
+                  className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600"
+                >
+                  →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Continue Button for Sherlock messages */}
+          {!isTyping && chatStep < chatSequence.length - 1 && chatSequence[chatStep + 1].speaker === 'sherlock' && (
+            <button 
+              onClick={handleChatContinue}
+              className="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            >
+              →
+            </button>
+          )}
+
+          {chatStep === chatSequence.length - 1 && !isTyping && (
+            <button 
+              onClick={() => setGameState('summary')}
+              className="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 flex items-center space-x-2"
+            >
+              <Download size={16} />
+              <span>Download Flora's AI Summary</span>
+            </button>
+          )}
+        </div>
+
+        {/* News Display */}
+        <div className="flex-1 bg-gradient-to-b from-red-800 to-red-900 flex items-center justify-center">
+          <div className="max-w-2xl">
+            <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="relative">
+                  <img 
+                    src="/Flora.png" 
+                    alt="Flora Jasmine"
+                    className="w-full h-80 object-cover"
+                  />
+                </div>
+                <div className="bg-red-600 text-white p-6 flex flex-col justify-center">
+                  <div className="bg-red-500 text-white px-3 py-1 rounded mb-3 inline-block">
+                    <h2 className="text-lg font-bold">Breaking News</h2>
+                  </div>
+                  <h1 className="text-xl font-bold leading-tight">
+                    Flora Jasmine arrested for the murder of Step-father Sir Eric Harpe
+                  </h1>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSummary = () => (
+    <div className="h-screen bg-gray-100">
+      {/* macOS Browser Bar */}
+      <div className="bg-gray-200 px-4 py-2 flex items-center justify-between border-b">
+        <div className="flex items-center space-x-2">
+          <div className="flex space-x-1">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          </div>
+          <span className="text-sm text-gray-600 ml-4">Flora Jasmine - AI Summary</span>
+        </div>
+        <div className="text-sm text-gray-600">Mon Jun 22 9:41 AM</div>
+      </div>
+
+      <div className="h-full flex">
+        {/* Chat Panel */}
+        <div className="w-1/3 bg-gray-300 p-6 flex flex-col">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center text-white text-xl">
+              🕵️
+            </div>
+            <span className="font-semibold text-gray-800">To: Sherlock</span>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white p-3 rounded-lg">
+              <p>Here's the AI summary that Scotland Yard looked at to accuse Flora. Go through it thoroughly. You can verify each piece of information by accessing its source. The source of information can be accessed if you hover and click on a sentence. There are 3 color highlighters which you can use to mark each line as <strong>"Accurate"</strong>, <strong>"Misinformation"</strong> and <strong>"Hallucination"</strong>. This way even I can track what you infer from the AI summary.</p>
+            </div>
+            
+            <button className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+              <Download size={16} />
+              <span>Download Flora's AI Summary</span>
+            </button>
+
+            <div className="bg-white p-3 rounded-lg">
+              <p>When you're ready, let me know if you think Flora is actually guilty or if the evidence is not sufficient to convict her.</p>
+            </div>
+
+            <div className="flex space-x-2">
+              <button className="flex-1 bg-red-400 text-white px-4 py-2 rounded-lg">
+                Guilty
+              </button>
+              <button className="flex-1 bg-blue-400 text-white px-4 py-2 rounded-lg">
+                Inconclusive
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Document */}
+        <div className="flex-1 bg-blue-900 p-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Document Window */}
+            <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+              {/* Document Header */}
+              <div className="bg-gray-100 px-6 py-4 border-b flex items-center justify-between">
+                <div className="flex space-x-1">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+                <span className="font-semibold">Flora Jasmine - AI Summary</span>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-green-200 border border-green-400 rounded"></div>
+                    <span className="text-xs">Accurate</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-red-200 border border-red-400 rounded"></div>
+                    <span className="text-xs">Misrepresentation</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-purple-200 border border-purple-400 rounded"></div>
+                    <span className="text-xs">Hallucination</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-6">
+                  <h1 className="text-2xl font-bold mb-2">Suspiciousness Rating – 85%</h1>
+                  <p className="text-lg text-gray-600">Disinherited under troubling circumstances.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="mb-4"><strong>Summary:</strong></p>
+                  
+                  <div className={`p-3 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                    classifications["fl_1"] ? getClassificationColor(classifications["fl_1"]) : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => handleSentenceClick("fl_1")}>
+                    Flora Jasmine, a 26-year-old doctoral researcher, is the step-daughter of Sir Eric Harpe.
+                    {classifications["fl_1"] && (
+                      <div className="mt-2">
+                        <span className="inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                          {classifications["fl_1"].charAt(0).toUpperCase() + classifications["fl_1"].slice(1)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`p-3 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                    classifications["fl_2"] ? getClassificationColor(classifications["fl_2"]) : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => handleSentenceClick("fl_2")}>
+                    She expressed aggressive intent in a voicemail to her friend the same day of the murder: "I hate him. I swear, if I had it in me, I'd kill him."
+                    {classifications["fl_2"] && (
+                      <div className="mt-2">
+                        <span className="inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                          {classifications["fl_2"].charAt(0).toUpperCase() + classifications["fl_2"].slice(1)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`p-3 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                    classifications["fl_3"] ? getClassificationColor(classifications["fl_3"]) : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => handleSentenceClick("fl_3")}>
+                    Her interview tone was elevated and defensive.
+                    {classifications["fl_3"] && (
+                      <div className="mt-2">
+                        <span className="inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                          {classifications["fl_3"].charAt(0).toUpperCase() + classifications["fl_3"].slice(1)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className={`p-3 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                      classifications["fl_4"] ? getClassificationColor(classifications["fl_4"]) : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleSentenceClick("fl_4")}>
+                      She refused to provide corroborating evidence for her whereabouts between 8–9 PM, and multiple inconsistencies were noted.
+                      {classifications["fl_4"] && (
+                        <div className="mt-2">
+                          <span className="inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                            {classifications["fl_4"].charAt(0).toUpperCase() + classifications["fl_4"].slice(1)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>Flora has a <span className={`cursor-pointer px-2 py-1 rounded transition-all ${
+                      classifications["fl_5"] ? getClassificationColor(classifications["fl_5"]) : 'hover:bg-gray-100'
+                    }`}
+                    onClick={() => handleSentenceClick("fl_5")}>
+                      history of conflict with the victim
+                      {classifications["fl_5"] && (
+                        <span className="ml-2 inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                          {classifications["fl_5"].charAt(0).toUpperCase() + classifications["fl_5"].slice(1)}
+                        </span>
+                      )}
+                    </span> and has been <span className={`cursor-pointer px-2 py-1 rounded transition-all ${
+                      classifications["fl_6"] ? getClassificationColor(classifications["fl_6"]) : 'hover:bg-gray-100'
+                    }`}
+                    onClick={() => handleSentenceClick("fl_6")}>
+                      investigating his business decisions
+                      {classifications["fl_6"] && (
+                        <span className="ml-2 inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                          {classifications["fl_6"].charAt(0).toUpperCase() + classifications["fl_6"].slice(1)}
+                        </span>
+                      )}
+                    </span>.</div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className={`p-3 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                      classifications["fl_7"] ? getClassificationColor(classifications["fl_7"]) : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleSentenceClick("fl_7")}>
+                      Flora was also removed from the will the day the victim was murdered, suggesting an immediate possible motive.
+                      {classifications["fl_7"] && (
+                        <div className="mt-2">
+                          <span className="inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                            {classifications["fl_7"].charAt(0).toUpperCase() + classifications["fl_7"].slice(1)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`p-3 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                      classifications["fl_8"] ? getClassificationColor(classifications["fl_8"]) : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleSentenceClick("fl_8")}>
+                      According to the constructed timeline, Flora was removed from the will following a heated argument with the victim, and the victim was murdered several hours later, making Flora's activities highly suspicious.
+                      {classifications["fl_8"] && (
+                        <div className="mt-2">
+                          <span className="inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                            {classifications["fl_8"].charAt(0).toUpperCase() + classifications["fl_8"].slice(1)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div>
+                      <span className={`cursor-pointer px-2 py-1 rounded transition-all ${
+                        classifications["fl_9"] ? getClassificationColor(classifications["fl_9"]) : 'hover:bg-gray-100'
+                      }`}
+                      onClick={() => handleSentenceClick("fl_9")}>
+                        Additional Sentiment Analysis of the voicemail audio recording suggests that Flora's tone was hostile,
+                        {classifications["fl_9"] && (
+                          <span className="ml-2 inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                            {classifications["fl_9"].charAt(0).toUpperCase() + classifications["fl_9"].slice(1)}
+                          </span>
+                        )}
+                      </span> and <span className={`cursor-pointer px-2 py-1 rounded transition-all ${
+                        classifications["fl_10"] ? getClassificationColor(classifications["fl_10"]) : 'hover:bg-gray-100'
+                      }`}
+                      onClick={() => handleSentenceClick("fl_10")}>
+                        the language used was threatening.
+                        {classifications["fl_10"] && (
+                          <span className="ml-2 inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                            {classifications["fl_10"].charAt(0).toUpperCase() + classifications["fl_10"].slice(1)}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className={`cursor-pointer px-2 py-1 rounded transition-all ${
+                        classifications["fl_11"] ? getClassificationColor(classifications["fl_11"]) : 'hover:bg-gray-100'
+                      }`}
+                      onClick={() => handleSentenceClick("fl_11")}>
+                        As a Black stepchild of a white father, the subject may have had a troubled childhood
+                        {classifications["fl_11"] && (
+                          <span className="ml-2 inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                            {classifications["fl_11"].charAt(0).toUpperCase() + classifications["fl_11"].slice(1)}
+                          </span>
+                        )}
+                      </span>, which was <span className={`cursor-pointer px-2 py-1 rounded transition-all ${
+                        classifications["fl_12"] ? getClassificationColor(classifications["fl_12"]) : 'hover:bg-gray-100'
+                      }`}
+                      onClick={() => handleSentenceClick("fl_12")}>
+                        displayed in signs of noncompliance and challenging investigative authority
+                        {classifications["fl_12"] && (
+                          <span className="ml-2 inline-block px-2 py-1 bg-white bg-opacity-70 rounded text-xs font-medium">
+                            {classifications["fl_12"].charAt(0).toUpperCase() + classifications["fl_12"].slice(1)}
+                          </span>
+                        )}
+                      </span>.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Character Card */}
+            <div className="mt-6 flex justify-end">
+              <div className="bg-blue-500 p-4 rounded-lg shadow-lg">
+                <div className="w-24 h-24 bg-white rounded-lg mb-2 overflow-hidden">
+                  <img 
+                    src="/Flora.png" 
+                    alt="Flora"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h3 className="text-white font-semibold text-center">Flora Jasmine</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Evidence Modal */}
+      {showEvidence && selectedSentence !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full m-4 max-h-96 overflow-y-auto">
+            <div className="bg-gray-100 px-6 py-4 border-b flex items-center justify-between">
+              <div className="flex space-x-1">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              </div>
+              <span className="font-semibold">{evidenceData[selectedSentence]?.title}</span>
+              <button 
+                onClick={() => setShowEvidence(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <h3 className="font-medium mb-2 flex items-center">
+                  <Search className="w-5 h-5 mr-2" />
+                  {evidenceData[selectedSentence]?.title}
+                </h3>
+                <div className="text-sm text-gray-600 mb-4">
+                  📄 Source: {evidenceData[selectedSentence]?.pdfSource}
+                </div>
+              </div>
+              
+              <ul className="space-y-2">
+                {evidenceData[selectedSentence]?.content.map((item, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 flex space-x-2">
+                <button 
+                  onClick={() => handleClassification(selectedSentence, 'accurate')}
+                  className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  Accurate
+                </button>
+                <button 
+                  onClick={() => handleClassification(selectedSentence, 'misrepresentation')}
+                  className="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Misrepresentation
+                </button>
+                <button 
+                  onClick={() => handleClassification(selectedSentence, 'hallucination')}
+                  className="flex-1 bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+                >
+                  Hallucination
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="font-sans">
+      {gameState === 'news' && renderNews()}
+      {gameState === 'chat' && renderChat()}
+      {gameState === 'summary' && renderSummary()}
+    </div>
+  );
+};
+
+export default Case429Game;
