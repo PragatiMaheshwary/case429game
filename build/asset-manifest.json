@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/case-429-game/static/css/main.c0d4f77a.css",
+    "main.js": "/case-429-game/static/js/main.9adc1613.js",
+    "index.html": "/case-429-game/index.html",
+    "main.c0d4f77a.css.map": "/case-429-game/static/css/main.c0d4f77a.css.map",
+    "main.9adc1613.js.map": "/case-429-game/static/js/main.9adc1613.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c0d4f77a.css",
+    "static/js/main.9adc1613.js"
+  ]
+}
