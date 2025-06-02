@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/case-429-game/static/css/main.c0d4f77a.css",
-    "main.js": "/case-429-game/static/js/main.9adc1613.js",
-    "index.html": "/case-429-game/index.html",
-    "main.c0d4f77a.css.map": "/case-429-game/static/css/main.c0d4f77a.css.map",
-    "main.9adc1613.js.map": "/case-429-game/static/js/main.9adc1613.js.map"
+    "main.css": "/game-case429/static/css/main.c0d4f77a.css",
+    "main.js": "/game-case429/static/js/main.9adc1613.js",
+    "index.html": "/game-case429/index.html",
+    "main.c0d4f77a.css.map": "/game-case429/static/css/main.c0d4f77a.css.map",
+    "main.9adc1613.js.map": "/game-case429/static/js/main.9adc1613.js.map"
   },
   "entrypoints": [
     "static/css/main.c0d4f77a.css",
