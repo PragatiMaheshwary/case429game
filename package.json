@@ -2,6 +2,7 @@
   "name": "case-429-game",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://pragatimaheshwary.github.io/game-case429",
   "dependencies": {
     "autoprefixer": "^10.4.17",
     "lucide-react": "^0.363.0",
@@ -15,7 +16,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
