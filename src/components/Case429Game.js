@@ -536,9 +536,9 @@ const Case429Game = () => {
             >
                   Open Chat
             </button>
-              </div>
-            </div>
           </div>
+        </div>
+      </div>
         </div>
       )}
     </div>
