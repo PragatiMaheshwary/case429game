@@ -20,7 +20,7 @@ const Case429Game = () => {
     { speaker: 'user', text: 'I am up for a challenge!' },
     { speaker: 'sherlock', text: 'Amazing! Start by proving Flora\'s innocence to gain access to files on other suspects so we can find the actual murderer.' },
     { speaker: 'user', text: 'Got it!' },
-    { speaker: 'sherlock', text: 'Here\'s the AI summary that Scotland Yard looked at to accuse Flora. Go through it thoroughly. You can verify each piece of information by accessing its source. The source of information can be accessed if you hover and click on a sentence. There are 3 color highlighters which you can use to mark each line as "Accurate", "Misinformation" and "Hallucination". This way even I can track what you infer from the AI summary.Make sure to classify each sentence before you make a conclusion.' }
+    { speaker: 'sherlock', text: 'Here\'s the AI summary that Scotland Yard looked at to accuse Flora. Go through it thoroughly. You can verify each piece of information by accessing its source. The source of information can be accessed if you hover and click on a sentence. There are 3 color highlighters which you can use to mark each line as "Accurate", "Misinformation" and "Hallucination". This way even I can track what you infer from the AI summary.' }
   ];
 
   const floraSummary = [
@@ -995,7 +995,6 @@ const Case429Game = () => {
           </div>
         </div>
       )}
-
 
       {/* Evidence Modal */}
       {showEvidence && selectedSentence !== null && (
