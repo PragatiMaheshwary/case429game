@@ -9,8 +9,10 @@ const Case429Game = () => {
   const [showEvidence, setShowEvidence] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [showAnswerKey, setShowAnswerKey] = useState(false);
+  const [feedbackMessages, setFeedbackMessages] = useState([]);
+  const [answerKeyPosition, setAnswerKeyPosition] = useState({ x: 100, y: 100 });
+
 
   const chatSequence = [
     { speaker: 'sherlock', text: 'HEY WATSON! DID YOU SEE THE NEWS?!' },
@@ -212,11 +214,49 @@ const Case429Game = () => {
       title: 'Will Documentation',
       pdfSource: 'Will_Documents.pdf',
       content: [
-        'FACT: Flora was never removed from any will',
-        'Sir Eric\'s will remained unchanged for 3 years prior to his death',
-        'Flora was never a beneficiary of the estate',
-        'Legal documents show no will modifications on the day of murder',
-        'This information appears to be completely fabricated'
+        'Sir Eric Harpe’s Will',
+        'Dated: April 5, 2025 (Last Update)',
+        'Executor(s): Sir Eric Harpe (until his death)',
+
+        'I, Sir Eric Harpe, being of sound mind and body, do hereby make and declare this to be my Last Will and Testament, revoking any and all wills and codicils previously made. This will outlines the distribution of my estate upon my death.',
+
+        'Section 1: Appointment of Executor',
+        'I appoint Harpe & Associates, my trusted legal counsel, as the executor of my estate. If Harpe & Associates is unable or unwilling to serve, I nominate Eddie Raymond, my assistant, as the secondary executor.',
+
+        'Section 2: Personal Property',
+        'To Dr. Cecilia Sheppard, I leave my private medical library and any personal letters or communications that may be found among my personal belongings.',
+
+
+        'To Flora Jasmine, my step-daughter, I leave $100,000, as a token of goodwill for her future endeavors.',
+
+
+        'To Eduardo (Eddie) Raymond, my trusted assistant, I leave my personal collection of rare wines and the family watch, which has been passed down through generations.',
+
+        'Section 3: The Harpe Estate',
+        'The Harpe Estate, including the main residence and any land associated with the property, shall be inherited by Dev Patel (Dave), my butler and loyal servant, provided that he agrees to retain the estate’s upkeep and manage it for the benefit of the family.',
+
+        'Section 4: Specific Bequests',
+        'To Mrs. Ferris, my former lover and confidant, I leave my entire collection of rare and antique books.',
+
+
+        'To Flora Jasmine, my step-daughter, I leave nothing further beyond the $100,000 I’ve already provided for her. (This section was amended and initiated by me on April 5, 2025, after I received certain information about her behavior that deeply concerned me.)',
+
+        'Section 5: Disinheritance Clause',
+        'I hereby disinherit Flora Jasmine from any further inheritance due to her recent actions that I find deeply disrespectful and indicative of her intentions to harm my reputation. I do not wish for her to inherit any further assets from me or my estate.',
+
+        'Section 6: Residual Estate',
+        'Any remaining estate not explicitly mentioned above shall be divided equally between Harpe & Associates, for the charitable purposes as they see fit, and Dev Patel (Dave), for his continued service in maintaining the estate.',
+
+        'Section 7: Final Requests',
+        'Upon my death, I request that my funeral be modest, without excessive ceremony, and that my cremated remains be scattered over the Harpe Estate, near the garden where I often found solace.',
+
+        'Signature:',
+        'Sir Eric Harpe',
+        'Date: April 5, 2025',
+
+        'Amendment (Codicil) to the Will',
+        'Date: April 5, 2025',
+        'In light of recent developments and after consulting with my legal advisors, I have decided to revise the terms of my Will regarding Flora Jasmine. After reviewing her actions and character, it is my decision that she shall no longer inherit the remainder of my estate or assets as initially planned.',
       ]
     },
     "fl_8": {
@@ -370,18 +410,20 @@ const Case429Game = () => {
         message = "I told you so! But you should keep looking and have an eye on those AI summaries. I think that AI tool does a decent job of extracting key information for the files. Also, I took a look at your highlights on the AI summary, good job on classifying those different pieces of information. Your attention to detail will come in handy for finding the actual killer!";
       } else {
         message = "I told you so! But you should keep looking and have an eye on those AI summaries. I think that AI tool does a decent job of extracting key information for the files. However, before we jump onto solving the case, I took a look at your highlights on the AI summaries, and looks like you might have wrongly classified certain pieces of information. Here's a corrected sheet…review it to avoid future mistakes!";
+        setShowAnswerKey(true);
       }
     } else { // guilty
       if (isAccurate) {
         message = "My dear dear Watson, even after classifying all those pieces of information correctly and looking at all the facts and misrepresentations you don't think there's a lot of ambiguity involved?! Take my word on this one and investigate the case further to find the real killer.";
       } else {
         message = "My dear dear Watson, looks like your miss-classification of the different pieces of information in the AI summary or accepting misrepresentations as facts led you to overlook a lot of ambiguity involved in this summary! Here's a corrected sheet…review it to avoid future mistakes! Now, take my word on this one and investigate the case further to find the real killer.";
+        setShowAnswerKey(true);
       }
     }
 
-    setFeedbackMessage(message);
-    setShowFeedback(true);
-  };
+     // Add Sherlock's feedback to chat messages
+     setFeedbackMessages(prev => [...prev, { speaker: 'sherlock', text: message }]);
+    };
 
   const handleNewsClick = () => {
     setShowNotification(true);
@@ -707,6 +749,22 @@ const Case429Game = () => {
               <p>When you're ready, let me know if you think Flora is actually guilty or if the evidence is not sufficient to convict her.</p>
             </div>
 
+               {/* Display feedback messages */}
+
+               {feedbackMessages.map((message, index) => (
+              <div key={index} className="bg-white p-3 rounded-lg">
+              <div className="flex items-start space-x-2">
+                  <div className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center text-white text-sm">
+                    🕵️
+                  </div>
+                  <div className="flex-1">
+                    <p><strong>Sherlock:</strong> {message.text}</p>
+                  </div>
+                </div>
+              </div>
+
+              ))}
+
             <div className="flex space-x-2">
               <button 
                 onClick={() => handleDecision('guilty')}
@@ -739,6 +797,17 @@ const Case429Game = () => {
                 <p className="text-red-600 mt-1">Please classify all sentences before making a decision.</p>
               )}
             </div>
+
+
+            {/* Show Answer Key Button */}
+            {showAnswerKey && (
+            <button 
+              onClick={() => setShowAnswerKey(true)}
+              className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            >
+              View Answer Key
+            </button>
+            )}
           </div>
         </div>
 
@@ -960,37 +1029,205 @@ const Case429Game = () => {
         </div>
       </div>
 
-      {/* Sherlock Feedback Modal */}
-      {showFeedback && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full m-4">
-            <div className="bg-blue-900 text-white p-4 rounded-t-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-blue-800 rounded-full flex items-center justify-center text-xl">
-                  🕵️
+      {/* Draggable Answer Key Modal */}
+      {showAnswerKey && (
+      <div 
+        className="fixed bg-white rounded-lg shadow-2xl border-2 border-blue-500 z-50 max-w-lg w-full"
+        style={{ 
+          left: answerKeyPosition.x, 
+          top: answerKeyPosition.y,
+          maxHeight: '80vh',
+          overflow: 'auto'
+        }}
+      >
+        <div 
+          className="bg-blue-500 text-white p-4 cursor-move flex items-center justify-between"
+          onMouseDown={(e) => {
+            const startX = e.clientX - answerKeyPosition.x;
+            const startY = e.clientY - answerKeyPosition.y;
+            const handleMouseMove = (e) => {
+
+              setAnswerKeyPosition({
+
+                x: e.clientX - startX,
+
+                y: e.clientY - startY
+
+              });
+
+            };
+
+            
+
+            const handleMouseUp = () => {
+
+              document.removeEventListener('mousemove', handleMouseMove);
+
+              document.removeEventListener('mouseup', handleMouseUp);
+
+            };
+
+            
+
+            document.addEventListener('mousemove', handleMouseMove);
+
+            document.addEventListener('mouseup', handleMouseUp);
+
+          }}
+
+        >
+
+          <h3 className="font-semibold">Answer Key - Correct Classifications</h3>
+
+          <button 
+
+            onClick={() => setShowAnswerKey(false)}
+
+            className="text-white hover:text-gray-200"
+
+          >
+
+            ✕
+
+          </button>
+
+        </div>
+
+        
+
+        <div className="p-4">
+
+          <div className="space-y-2 text-sm">
+
+            {floraSummary.map((sentence, index) => {
+
+              const correctType = {
+
+                "fl_1": "accurate",
+
+                "fl_2": "hallucination", 
+
+                "fl_3": "misrepresentation",
+
+                "fl_4": "misrepresentation",
+
+                "fl_5": "accurate",
+
+                "fl_6": "accurate",
+
+                "fl_7": "accurate",
+
+                "fl_8": "misrepresentation",
+
+                "fl_9": "hallucination",
+
+                "fl_10": "accurate",
+
+                "fl_11": "hallucination",
+
+                "fl_12": "misrepresentation"
+
+              }[sentence.id];
+
+              
+
+              const userType = classifications[sentence.id];
+
+              const isCorrect = userType === correctType;
+
+              
+
+              return (
+
+                <div 
+
+                  key={sentence.id}
+
+                  className={`p-2 rounded border-2 ${getClassificationColor(correctType)} ${
+
+                    !isCorrect ? 'border-red-600 border-dashed' : ''
+
+                  }`}
+
+                >
+
+                  <div className="flex items-center justify-between mb-1">
+
+                    <span className="font-medium text-xs">{sentence.id.toUpperCase()}</span>
+
+                    <div className="flex items-center space-x-2">
+
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+
+                        correctType === 'accurate' ? 'bg-green-600 text-white' :
+
+                        correctType === 'misrepresentation' ? 'bg-red-600 text-white' :
+
+                        'bg-purple-600 text-white'
+
+                      }`}>
+
+                        {correctType.charAt(0).toUpperCase() + correctType.slice(1)}
+
+                      </span>
+
+                      {!isCorrect && (
+
+                        <span className="text-red-600 text-xs font-bold">
+
+                          ❌ Your answer: {userType || 'None'}
+
+                        </span>
+
+                      )}
+
+                      {isCorrect && (
+
+                        <span className="text-green-600 text-xs font-bold">✓</span>
+
+                      )}
+
+                    </div>
+
+                  </div>
+
+                  <p className="text-xs">{sentence.text}</p>
+
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold">Sherlock Holmes</div>
-                  <div className="text-sm text-blue-200">Feedback on your analysis</div>
-                </div>
+
+              );
+
+            })}
+
+          </div>
+
+          
+
+          <div className="mt-4 p-3 bg-gray-100 rounded">
+
+            <h4 className="font-semibold text-sm mb-2">Legend:</h4>
+
+            <div className="flex flex-wrap gap-2 text-xs">
+
+              <div className="flex items-center space-x-1">
+
+                <div className="w-3 h-3 bg-green-200 border border-green-400 rounded"></div>
+
+                <span>Accurate</span>3
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-red-200 border border-red-400 rounded"></div>
+                <span>Misrepresentation</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-purple-200 border border-purple-400 rounded"></div>
+                <span>Hallucination</span>
               </div>
             </div>
-            <div className="p-6">
-              <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                <p className="text-gray-800">{feedbackMessage}</p>
-              </div>
-              <div className="text-center">
-                <button 
-                  onClick={() => {
-                    setShowFeedback(false);
-                    // Here you can transition to the next phase of the game
-                    // For now, we'll just close the modal
-                  }}
-                  className="bg-blue-900 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors font-semibold"
-                >
-                  Continue Investigation
-                </button>
-              </div>
+            <p className="text-xs text-gray-600 mt-2">
+              ❌ = Your incorrect classification | ✓ = Correct classification
+            </p>
+
             </div>
           </div>
         </div>
