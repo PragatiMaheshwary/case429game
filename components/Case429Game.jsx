@@ -325,10 +325,8 @@ const Case429Game = () => {
         />
       )}
       {gameState === 'investigation' && (
-        <InvestigationDesktop 
-          availableSuspects={availableSuspects}
-          completedSuspects={completedSuspects}
-          onSuspectSelect={handleSuspectSelect}
+        <InvestigationDesktop
+          onBack={handleBackToDesktop}
           currentSuspect={currentSuspect}
         />
       )}
