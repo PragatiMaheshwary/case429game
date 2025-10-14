@@ -326,8 +326,9 @@ const Case429Game = () => {
       )}
       {gameState === 'investigation' && (
         <InvestigationDesktop
-          onBack={handleBackToDesktop}
-          currentSuspect={currentSuspect}
+          availableSuspects={availableSuspects}
+          completedSuspects={completedSuspects}
+          onSuspectSelect={handleSuspectSelect}
         />
       )}
       <BackgroundMusic />
