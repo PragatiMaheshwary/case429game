@@ -74,6 +74,10 @@ const Case429Game = () => {
     setGameState('investigation');
   };
 
+  const handleGameComplete = () => {
+    setGameState('complete');
+  };
+
   const renderNews = () => (
     <div className="h-screen bg-gray-100 relative">
       {/* macOS Browser Bar */}
@@ -310,6 +314,61 @@ const Case429Game = () => {
     </div>
   );
 
+  const renderGameComplete = () => (
+    <div className="h-screen bg-gray-100">
+      <div className="bg-gray-200 px-4 py-2 flex items-center justify-between border-b">
+        <div className="flex items-center space-x-2">
+          <div className="flex space-x-1">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          </div>
+          <span className="text-sm text-gray-600 ml-4">Case Solved!</span>
+        </div>
+      </div>
+  
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-green-600 text-white p-8">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl">
+                🕵️
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Congratulations, Watson!</h2>
+                <p className="text-green-100">You've solved the case!</p>
+              </div>
+            </div>
+          </div>
+  
+          <div className="p-8">
+            <h3 className="text-xl font-bold mb-4">Case Summary</h3>
+            <p className="text-gray-700 mb-6">
+              You successfully identified Dr. Cecilia Sheppard as the murderer and uncovered her motive of covering up the blackmail.
+            </p>
+  
+            <div className="bg-gray-50 p-6 rounded-lg mb-6">
+              <h4 className="font-semibold mb-2">Key Learnings about AI and Bias:</h4>
+              <ul className="list-disc list-inside space-y-2 text-gray-700">
+                <li>AI systems can inherit historical biases from their training data</li>
+                <li>Factual information needs to be verified across multiple sources</li>
+                <li>AI can sometimes hallucinate or generate inaccurate information</li>
+                <li>Critical thinking is essential when working with AI-generated content</li>
+              </ul>
+            </div>
+  
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            >
+              Play Again
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="font-sans">
       {gameState === 'news' && renderNews()}
@@ -322,6 +381,7 @@ const Case429Game = () => {
           isCompleted={completedSuspects.includes(currentSuspect)}
           onComplete={handleSuspectComplete}
           onBackToDesktop={handleBackToDesktop}
+          onGameComplete={handleGameComplete}
         />
       )}
       {gameState === 'investigation' && (
@@ -331,6 +391,7 @@ const Case429Game = () => {
           onSuspectSelect={handleSuspectSelect}
         />
       )}
+      {gameState === 'complete' && renderGameComplete()}
       <BackgroundMusic />
     </div>
   );

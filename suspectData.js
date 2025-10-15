@@ -47,6 +47,7 @@ export const CLASSIFICATION_TYPES = {
     flora: {
       id: 'flora',
       name: "Flora Jasmine",
+      rating: "85%",
       image: "/Flora.png",
       role: "Step-daughter",
       summary: [
@@ -142,6 +143,7 @@ export const CLASSIFICATION_TYPES = {
     eddie: {
       id: 'eddie',
       name: "Eddie Harpe",
+      rating: "64%",
       image: "/Flora.png", // Replace with Eddie's image
       role: "Nephew",
       summary: [
@@ -187,6 +189,7 @@ export const CLASSIFICATION_TYPES = {
     cecilia: {
       id: 'cecilia',
       name: "Dr. Cecilia Sheppard",
+      rating: "32%",
       image: "/Flora.png", // Replace with Cecilia's image
       role: "Personal Physician",
       summary: [
@@ -231,6 +234,7 @@ export const CLASSIFICATION_TYPES = {
     eric: {
       id: 'eric',
       name: "Sir Eric Harpe",
+      rating: "Victim",
       image: "/Flora.png", // Replace with Eric's image
       role: "Victim",
       summary: [

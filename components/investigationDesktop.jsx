@@ -44,7 +44,7 @@ const InvestigationDesktop = ({
                   isCompleted ? 'border-4 border-green-500' : ''
                 }`}
               >
-                <div className="relative h-48">
+                <div className="relative h-90">
                   <img 
                     src={suspect.image || '/placeholder.png'} // Add fallback image
                     alt={suspect.name || 'Unknown Suspect'}

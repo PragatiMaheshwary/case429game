@@ -5,6 +5,9 @@ import { Download, Search } from 'lucide-react';
 import { SUSPECTS_DATA, CLASSIFICATION_TYPES, getCorrectClassifications, checkClassificationAccuracy, checkAllClassified } from './suspectData';
 import AnswerKey from './answerKey';
 import EvidenceContent from './EvidenceContent';
+import MotiveModal from './MotiveModal';
+import FeedbackModal from './FeedbackModal';
+import { checkSolution } from './gameLogic';
 
 const SuspectSummary = ({ 
   suspectId, 
@@ -12,13 +15,17 @@ const SuspectSummary = ({
   setClassifications,
   isCompleted,
   onComplete,
-  onBackToDesktop 
+  onBackToDesktop,
+  onGameComplete
 }) => {
   const [selectedSentence, setSelectedSentence] = useState(null);
   const [showEvidence, setShowEvidence] = useState(false);
   const [showAnswerKey, setShowAnswerKey] = useState(false);
   const [feedbackMessages, setFeedbackMessages] = useState([]);
   const [answerKeyPosition, setAnswerKeyPosition] = useState({ x: 100, y: 100 });
+  const [showMotiveModal, setShowMotiveModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackType, setFeedbackType] = useState(null);
 
   const suspect = SUSPECTS_DATA[suspectId];
   if (!suspect) return <div>Suspect not found</div>;
@@ -42,8 +49,16 @@ const SuspectSummary = ({
   };
 
   const handleDecision = (decision) => {
-    if (!checkAllClassified(suspectId, classifications)) {
+    // For Eddie, Cecilia, and Ferris, don't require all classifications to be done
+    const isFlora = suspectId === 'flora';
+    if (isFlora && !checkAllClassified(suspectId, classifications)) {
       alert("Please classify all sentences before making a decision.");
+      return;
+    }
+
+    if (decision === 'guilty' && !isFlora) {
+      // Show motive selection for Eddie, Cecilia, and Ferris
+      setShowMotiveModal(true);
       return;
     }
 
@@ -51,6 +66,13 @@ const SuspectSummary = ({
     let message = "";
 
     if (decision === 'inconclusive') {
+      // For Eddie, Cecilia, and Ferris, if not all sentences classified, go back to desktop
+      if (!checkAllClassified(suspectId, classifications)) {
+        onBackToDesktop();
+        return;
+      }
+      
+      // If all sentences are classified, show results
       if (isAccurate) {
         message = `Excellent work on ${suspect.name}! Your classifications were accurate. This analysis will help us understand the case better.`;
       } else {
@@ -58,20 +80,51 @@ const SuspectSummary = ({
         setShowAnswerKey(true);
       }
     } else { // guilty
-      if (isAccurate) {
-        message = `Interesting theory about ${suspect.name}. Your classifications were correct, but consider all the evidence carefully before making final accusations.`;
+      // All suspects go to motive selection when marked guilty
+      if (suspectId === 'eddie' || suspectId === 'ferris') {
+        // Eddie/Ferris guilty - will go to motive selection but show wrong feedback first
+        message = "How can you be so wrong Watson?! No no no….you need to be cautious about distinguishing facts within those AI summaries. Make sure to come back to me only with your highlights correctly completed next time.";
+        setFeedbackMessages(prev => [...prev, { speaker: 'sherlock', text: message }]);
+        // Still show motive selection
+        setShowMotiveModal(true);
+        return;
       } else {
-        message = `Your analysis of ${suspect.name} has some classification errors that may have influenced your conclusion. Review the corrections.`;
-        setShowAnswerKey(true);
+        // Cecilia guilty - will go to motive selection
+        if (isAccurate) {
+          message = `Interesting theory about ${suspect.name}. Your classifications were correct, but consider all the evidence carefully before making final accusations.`;
+        } else {
+          message = `Your analysis of ${suspect.name} has some classification errors that may have influenced your conclusion. Review the corrections.`;
+          setShowAnswerKey(true);
+        }
       }
     }
 
     setFeedbackMessages(prev => [...prev, { speaker: 'sherlock', text: message }]);
   };
 
+  const handleMotiveSelection = (motive) => {
+    setShowMotiveModal(false);
+    
+    // Check the solution using the game logic
+    const result = checkSolution(suspectId, motive);
+    setFeedbackType(result);
+    setShowFeedbackModal(true);
+    
+    // Clear classifications if wrong
+    if (result !== 'correct') {
+      setClassifications({});
+    }
+  };
+
   const handleContinueInvestigation = () => {
     onComplete(suspectId);
     onBackToDesktop();
+  };
+
+  const handleGameComplete = () => {
+    if (onGameComplete) {
+      onGameComplete();
+    }
   };
 
   // If this suspect is completed, show the correct classifications
@@ -137,9 +190,9 @@ const SuspectSummary = ({
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => handleDecision('guilty')}
-                    disabled={!checkAllClassified(suspectId, classifications)}
+                    disabled={suspectId === 'flora' && !checkAllClassified(suspectId, classifications)}
                     className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                      checkAllClassified(suspectId, classifications) 
+                      (suspectId === 'flora' ? checkAllClassified(suspectId, classifications) : true)
                         ? 'bg-red-400 text-white hover:bg-red-500' 
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
@@ -148,9 +201,9 @@ const SuspectSummary = ({
                   </button>
                   <button 
                     onClick={() => handleDecision('inconclusive')}
-                    disabled={!checkAllClassified(suspectId, classifications)}
+                    disabled={suspectId === 'flora' && !checkAllClassified(suspectId, classifications)}
                     className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                      checkAllClassified(suspectId, classifications) 
+                      (suspectId === 'flora' ? checkAllClassified(suspectId, classifications) : true)
                         ? 'bg-blue-400 text-white hover:bg-blue-500' 
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
@@ -165,6 +218,20 @@ const SuspectSummary = ({
                   {!checkAllClassified(suspectId, classifications) && (
                     <p className="text-red-600 mt-1">Please classify all sentences before making a decision.</p>
                   )}
+                </div>
+
+                {/* Character Card below decision buttons */}
+                <div className="mt-4">
+                  <div className="bg-blue-500 p-4 rounded-lg shadow-lg inline-block">
+                    <div className="w-40 h-40 bg-white rounded-lg mb-2 overflow-hidden">
+                      <img 
+                        src={suspect.image} 
+                        alt={suspect.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="text-white font-semibold text-center">{suspect.name}</h3>
+                  </div>
                 </div>
               </>
             )}
@@ -187,12 +254,12 @@ const SuspectSummary = ({
             {/* Document Window */}
             <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
               {/* Document Header */}
-              <div className="bg-gray-100 px-6 py-4 border-b flex items-center justify-between">
-                <div className="flex space-x-1">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <div className="bg-gray-100 px-6 py-4 border-b flex items-end justify-between">
+                {/* <div className="flex space-x-1"> */}
+                  {/* <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                   <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                </div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div> */}
+                {/* </div> */}
                 <span className="font-semibold">{suspect.name} - AI Summary</span>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
@@ -212,7 +279,7 @@ const SuspectSummary = ({
 
               <div className="p-6">
                 <div className="mb-6">
-                  <h1 className="text-2xl font-bold mb-2">Suspiciousness Rating – 85%</h1>
+                  {/* <h1 className="text-2xl font-bold mb-2">Suspiciousness Rating – 85%</h1> */}
                   <p className="text-lg text-gray-600">Analysis of {suspect.name} ({suspect.role})</p>
                 </div>
 
@@ -240,20 +307,6 @@ const SuspectSummary = ({
                 </div>
               </div>
             </div>
-
-            {/* Character Card */}
-            <div className="mt-6 flex justify-end">
-              <div className="bg-blue-500 p-4 rounded-lg shadow-lg">
-                <div className="w-24 h-24 bg-white rounded-lg mb-2 overflow-hidden">
-                  <img 
-                    src={suspect.image} 
-                    alt={suspect.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className="text-white font-semibold text-center">{suspect.name}</h3>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -272,12 +325,12 @@ const SuspectSummary = ({
       {/* Evidence Modal */}
       {showEvidence && selectedSentence !== null && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full m-4 max-h-96 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full m-4 max-h-96 overflow-y-auto relative evidence-modal">
             <div className="bg-gray-100 px-6 py-4 border-b flex items-center justify-between">
               <div className="flex space-x-1">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                {/* <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                 <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div> */}
               </div>
               <span className="font-semibold">{suspect.evidence[selectedSentence]?.title || 'Evidence'}</span>
               <button 
@@ -288,7 +341,8 @@ const SuspectSummary = ({
               </button>
             </div>
             
-            <div className="p-6">
+            
+            <div className="p-6 evidence-modal-content">
               <div className="mb-4">
                 <h3 className="font-medium mb-2 flex items-center">
                   <Search className="w-5 h-5 mr-2" />
@@ -320,11 +374,36 @@ const SuspectSummary = ({
                 >
                   Hallucination
                 </button>
+                <button
+                  onClick={() => {
+                    const modal = document.querySelector('.evidence-modal');
+                    if (modal) modal.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+                  title="Back to Top"
+                >
+                  ↑
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Motive Selection Modal */}
+      <MotiveModal
+        isOpen={showMotiveModal}
+        onClose={() => setShowMotiveModal(false)}
+        onSelectMotive={handleMotiveSelection}
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        feedbackType={feedbackType}
+        onContinue={feedbackType === 'correct' ? handleGameComplete : handleContinueInvestigation}
+      />
     </div>
   );
 };
